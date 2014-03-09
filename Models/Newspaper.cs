@@ -15,7 +15,6 @@ namespace Models
         #region Instance fields
         [DataMember]
         private readonly ObservableCollection<Advertisement> _advertisements = new ObservableCollection<Advertisement>();
-        private bool _isNameValid;
         [DataMember]
         private string _name = "";
         [DataMember]
@@ -34,7 +33,6 @@ namespace Models
 
         public Newspaper(Guid uKey, string name)
         {
-            IsNameValid = false;
             UKey = uKey;
             _name = name;
             DbStatus = DbModificationState.Unchanged;
@@ -45,7 +43,6 @@ namespace Models
             _uKey = (Guid)info.GetValue("UKey", typeof(Guid));
             Name = (string)info.GetValue("Name", typeof(string));
             DbStatus = DbModificationState.Unchanged;
-            IsEntityValid = IsNameValid = true;
         }
 
         #endregion
@@ -66,45 +63,7 @@ namespace Models
                     _advertisements.Add(ad);
             }
         }
-        [XmlIgnore]
-        public bool IsNameValid
-        {
-            get { return _isNameValid; }
-            private set
-            {
-                if (_isNameValid == value)
-                    return;
-
-                OnPropertyChanging(() => IsNameValid);
-                _isNameValid = value;
-                OnPropertyChanged(() => IsNameValid);
-
-                IsValid = value;
-            }
-        }
-        [XmlIgnore]
-        public bool IsValid
-        {
-            get { return IsEntityValid; }
-            private set
-            {
-                if (value == IsEntityValid)
-                    return;
-
-                if (IsNameValid)
-                {
-                    OnPropertyChanging(() => IsValid);
-                    IsEntityValid = true;
-                    OnPropertyChanged(() => IsValid);
-                }
-                else if (!value)
-                {
-                    OnPropertyChanging(() => IsValid);
-                    IsEntityValid = false;
-                    OnPropertyChanged(() => IsValid);
-                }
-            }
-        }
+ 
         [DataMember]
         public string Name
         {
@@ -116,9 +75,12 @@ namespace Models
 
                 OnPropertyChanging(() => Name);
                 _name = value ?? "";
+
+                if(string.IsNullOrEmpty(_name))
+                    SetError(() => Name, "Newspaper name cannot be empty.");
+
                 OnPropertyChanged(() => Name);
 
-                IsNameValid = !string.IsNullOrEmpty(Name);
             }
         }
         [DataMember]

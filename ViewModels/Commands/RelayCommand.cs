@@ -31,11 +31,11 @@ namespace ViewModels.Commands
             var newspaper = parameter as Newspaper;
 
             if(advertisement != null)
-                if (advertisement.IsValid && (!advertisement.IsUnchanged))
+                if (!advertisement.HasErrors && (!advertisement.IsUnchanged))
                     returnValue = true;
 
             if(newspaper != null)
-                if (newspaper.IsValid && (!newspaper.IsUnchanged))
+                if (newspaper.HasErrors && (!newspaper.IsUnchanged))
                     returnValue = true;
 
             return returnValue;

@@ -1,15 +1,17 @@
 ﻿using System;
+using System.Collections;
 using System.ComponentModel;
 using System.Linq.Expressions;
 using Models;
 
 namespace ViewModels
 {
-    public abstract class ViewModelBase : INotifyPropertyChanging, INotifyPropertyChanged
+    public abstract class ViewModelBase : INotifyPropertyChanging, INotifyPropertyChanged, INotifyDataErrorInfo
     {
         #region Constructors
 
-        private EntityBase _model;
+        private readonly EntityBase _model;
+
         protected ViewModelBase(EntityBase model)
         {
             _model = model;
@@ -41,7 +43,7 @@ namespace ViewModels
         protected void OnPropertyChanged<T>(Expression<Func<T>> exp)
         {
             var memberExpression = (MemberExpression) exp.Body;
-            var propertyName = memberExpression.Member.Name;
+            string propertyName = memberExpression.Member.Name;
 
             OnPropertyChangedCaller(propertyName);
         }
@@ -49,20 +51,20 @@ namespace ViewModels
         protected void OnPropertyChanging<T>(Expression<Func<T>> exp)
         {
             var memberExpression = (MemberExpression) exp.Body;
-            var propertyName = memberExpression.Member.Name;
+            string propertyName = memberExpression.Member.Name;
 
             OnPropertyChangingCaller(propertyName);
         }
 
         private void OnPropertyChangedCaller(string propertyName)
         {
-            if (PropertyChanged != null)
+            if(PropertyChanged != null)
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
         }
 
         private void OnPropertyChangingCaller(string propertyName)
         {
-            if (PropertyChanging != null)
+            if(PropertyChanging != null)
                 PropertyChanging(this, new PropertyChangingEventArgs(propertyName));
         }
 
@@ -77,5 +79,17 @@ namespace ViewModels
         }
 
         #endregion
+
+        public IEnumerable GetErrors(string propertyName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool HasErrors
+        {
+            get { return IsEntityValid; }
+        }
+
+        public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
     }
 }

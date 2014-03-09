@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows.Input;
@@ -31,16 +31,6 @@ namespace ViewModels
         #region Properties
 
         public ICommand DeleteCommand { get; set; }
-
-        public bool IsNameValid
-        {
-            get { return _model.IsNameValid; }
-        }
-
-        public bool IsTextValid
-        {
-            get { return _model.IsTextValid; }
-        }
 
         public bool IsUnchanged
         {

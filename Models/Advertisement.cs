@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Runtime.Serialization;
@@ -11,8 +11,6 @@ namespace Models
     {
         #region Instance fields
 
-        private bool _isNameValid;
-        private bool _isTextValid;
         [DataMember]
         private string _name;
         [DataMember]
@@ -47,70 +45,12 @@ namespace Models
             Name = (string) info.GetValue("Name", typeof (string));
             Text = (string) info.GetValue("Text", typeof (string));
             DbStatus = DbModificationState.Unchanged;
-            IsEntityValid = IsNameValid = IsTextValid = true;
         }
 
         #endregion
 
         #region Properties
-        [XmlIgnore]
 
-        public bool IsNameValid
-        {
-            get { return _isNameValid; }
-            private set
-            {
-                if (_isNameValid == value)
-                    return;
-
-                OnPropertyChanging(() => IsNameValid);
-                _isNameValid = value;
-                OnPropertyChanged(() => IsNameValid);
-
-                IsValid = value;
-            }
-        }
-
-        [XmlIgnore]
-        public bool IsTextValid
-        {
-            get { return _isTextValid; }
-            set
-            {
-                if (_isTextValid == value)
-                    return;
-
-                OnPropertyChanging(() => IsTextValid);
-                _isTextValid = value;
-                OnPropertyChanged(() => IsTextValid);
-
-                IsValid = value;
-            }
-        }
-
-        [XmlIgnore]
-        public bool IsValid
-        {
-            get { return IsEntityValid; }
-            private set
-            {
-                if (value == IsEntityValid)
-                    return;
-
-                if (IsNameValid && IsTextValid)
-                {
-                    OnPropertyChanging(() => IsValid);
-                    IsEntityValid = true;
-                    OnPropertyChanged(() => IsValid);
-                }
-                else if (!value)
-                {
-                    OnPropertyChanging(() => IsValid);
-                    IsEntityValid = false;
-                    OnPropertyChanged(() => IsValid);
-                }
-            }
-        }
 
         public string Name
         {
@@ -122,9 +62,16 @@ namespace Models
 
                 OnPropertyChanging(() => Name);
                 _name = value ?? "";
-                OnPropertyChanged(() => Name);
 
-                IsNameValid = !string.IsNullOrEmpty(_name);
+                if(string.IsNullOrEmpty(_name))
+                    SetError(()=>Name, "Advertisement name cannot be empty.");
+                else
+                    ClearError(() => Name);
+
+                OnPropertyChanged(() => Name);
+                NotifyErrorsChanged(()=>Name);
+
+
             }
         }
 
@@ -153,9 +100,11 @@ namespace Models
 
                 OnPropertyChanging(() => Text);
                 _text = value;
-                OnPropertyChanged(() => Text);
 
-                IsTextValid = !string.IsNullOrEmpty(_text);
+                if(string.IsNullOrEmpty(_text))
+                    SetError(()=>Text,"The Advertisement text cannot be empty.");
+
+                OnPropertyChanged(() => Text);
             }
         }
 

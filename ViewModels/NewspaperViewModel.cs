@@ -35,12 +35,6 @@ namespace ViewModels
             get { return _model.IsUnchanged; }
         }
         
-        public bool IsNameValid
-        {
-            get { return _model.IsNameValid; }
-        }
-
-
         public string Name
         {
             get { return _model.Name; }

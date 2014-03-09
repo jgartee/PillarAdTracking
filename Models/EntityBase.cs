@@ -1,25 +1,30 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Linq.Expressions;
-using System.Runtime.Serialization;
+using System.Reflection;
 
 namespace Models
 {
     [Flags]
     public enum DbModificationState
     {
-        Unchanged=1,
-        Added=2,
-        Modified=4,
-        Deleted=8
+        Unchanged = 1,
+        Added = 2,
+        Modified = 4,
+        Deleted = 8
     };
 
-    public abstract class EntityBase : INotifyPropertyChanging, INotifyPropertyChanged
+    public abstract class EntityBase : INotifyPropertyChanging, INotifyPropertyChanged, INotifyDataErrorInfo
     {
         #region Instance fields
 
+        private readonly Dictionary<string, List<string>> _errorDictionary =
+                new Dictionary<string, List<string>>();
+
         private DbModificationState _dbStatus;
-        private bool _isEntityValid;
 
         #endregion
 
@@ -34,17 +39,15 @@ namespace Models
 
         #region Properties
 
-        public bool IsEntityValid
+        public DbModificationState DbStatus
         {
-            get { return _isEntityValid; }
+            get { return _dbStatus; }
             set
             {
-                if (_isEntityValid == value)
+                if(_dbStatus == value)
                     return;
 
-                OnPropertyChanging(()=>IsEntityValid);
-                _isEntityValid = value;
-                OnPropertyChanged(()=>IsEntityValid);
+                _dbStatus = value;
             }
         }
 
@@ -63,21 +66,14 @@ namespace Models
             get { return DbStatus == DbModificationState.Deleted; }
         }
 
+        public bool IsEntityValid
+        {
+            get { return !HasErrors; }
+        }
+
         public bool IsUnchanged
         {
             get { return DbStatus == DbModificationState.Unchanged; }
-        }
-
-        public DbModificationState DbStatus
-        {
-            get { return _dbStatus; }
-            set
-            {
-                if (_dbStatus == value)
-                    return;
-
-                _dbStatus = value;
-            }
         }
 
         #endregion
@@ -96,7 +92,6 @@ namespace Models
 
         #region Class Members
 
-
         protected void OnPropertyChanged<T>(Expression<Func<T>> expression)
         {
             var memberExpression = (MemberExpression) expression.Body;
@@ -104,7 +99,7 @@ namespace Models
 
             DbStatus = DbStatus == DbModificationState.Unchanged ? DbModificationState.Modified : DbStatus;
 
-            if (PropertyChanged != null)
+            if(PropertyChanged != null)
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
         }
 
@@ -113,10 +108,75 @@ namespace Models
             var memberExpression = (MemberExpression) expression.Body;
             string propertyName = memberExpression.Member.Name;
 
-            if (PropertyChanging != null)
+            if(PropertyChanging != null)
                 PropertyChanging(this, new PropertyChangingEventArgs(propertyName));
         }
 
         #endregion
+
+        protected void SetError<T>(Expression<Func<T>> propertyExpression, string message)
+        {
+            List<string> errorCollection;
+
+            _errorDictionary.TryGetValue(ExtractPropertyName(propertyExpression), out errorCollection);
+
+            if(errorCollection != null && errorCollection.Any())
+            {
+                if(!errorCollection.Contains(message))
+                    errorCollection.Add(message);
+            }
+            else
+            {
+                errorCollection = new List<string>{message};
+                _errorDictionary.Add(ExtractPropertyName(propertyExpression), errorCollection);
+            }
+        }
+
+        protected void ClearError<T>(Expression<Func<T>> propertyExpression)
+        {
+            List<string> errorCollection;
+
+            _errorDictionary.TryGetValue(ExtractPropertyName(propertyExpression), out errorCollection);
+
+            if(errorCollection != null && errorCollection.Any())
+                errorCollection.Remove(ExtractPropertyName(propertyExpression));
+        }
+
+        public IEnumerable GetErrors(string propertyName)
+        {
+            return _errorDictionary[propertyName];
+        }
+
+        public bool HasErrors
+        {
+            get { return _errorDictionary.Values.Any(); }
+        }
+
+        protected void NotifyErrorsChanged<T>(Expression<Func<T>> propertyExpression)
+        {
+            if(ErrorsChanged != null)
+            {
+                ErrorsChanged(this, new DataErrorsChangedEventArgs(ExtractPropertyName(propertyExpression)));
+            }
+        }
+
+        public static string ExtractPropertyName<T>(Expression<Func<T>> propertyExpression)
+        {
+            var memberExpression = propertyExpression.Body as MemberExpression;
+            if (memberExpression == null)
+                throw new ArgumentException("not member access expression.");
+
+            var property = memberExpression.Member as PropertyInfo;
+            if (property == null)
+                throw new ArgumentException("expression not property.");
+
+            var getMethod = property.GetGetMethod(true);
+            if (getMethod == null)
+                throw new ArgumentException("static expression.");
+
+            return memberExpression.Member.Name;
+        }
+
+        public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
     }
 }

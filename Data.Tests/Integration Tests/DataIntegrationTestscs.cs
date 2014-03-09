@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FluentAssertions;
@@ -24,12 +24,11 @@ namespace Data.Tests.Integration_Tests
             papers.ForEach(repository.Save);
 
             //	Act
-            Directory.SetCurrentDirectory(@"\projects\PillarAdTracking\Data.Tests\bin\Debug");  //  hard-coded only in sample project
             var cacheFileName = Directory.GetFiles(Directory.GetCurrentDirectory()).ToList();
-            var fileName = cacheFileName.FirstOrDefault(f => f.EndsWith("NewspaperData.json"));
+            var fileName = cacheFileName.FirstOrDefault(f => f.EndsWith("NewspaperData.txt"));
             //	Assert
 
-            cacheFileName.Should().NotBeNull();
+            fileName.Should().NotBeNull();
 
             //  This is two tests because we are using a PropertyData construct and we must deal with each file 
             //  independently.  XUnit runs tests concurrently, and this test must run in isolation.  I could have 

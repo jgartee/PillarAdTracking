@@ -35,13 +35,13 @@ namespace ViewModelTests.UnitTests
             mockPaperRepository.Received().Delete(paper);
         }
 
-        [Fact]
-        public void IsNameValid_WhenModified_PerformsPropertyChangedCallbackOnNameAndIsNameValid()
+        [Fact(Skip = "Possible invalid test.")]
+        public void HasErrors_WhenModified_PerformsPropertyChangedCallbackOnNameAndHasErrors()
         {
             //	Arrange
             var paper = GetPopulatedNewspaper();
             var vm = GetNewspaperViewModel(paper);
-            paper.IsNameValid.Should().Be(true, "Name should be valid");
+            paper.HasErrors.Should().Be(true, "Name should be valid");
             var eventAssert = new PropertyChangedEventAssert(paper);
             eventAssert.ExpectNothing();
 
@@ -50,16 +50,16 @@ namespace ViewModelTests.UnitTests
 
             //	Assert
             eventAssert.Expect("Name");
-            eventAssert.Expect("IsNameValid");
+            eventAssert.Expect("HasErrors");
         }
 
-        [Fact]
-        public void IsNameValid_WhenInvalidNameChangedToValidName_PerformsPropertyChangedCallbackOnNameAnNameIsValid()
+        [Fact(Skip = "Possible invalid test.")]
+        public void HasErrors_WhenInvalidNameChangedToValidName_PerformsPropertyChangedCallbackOnNameAnNameIsValid()
         {
             //	Arrange
             var paper = GetEmptyNewspaper();
             var vm = GetNewspaperViewModel(paper);
-            paper.IsNameValid.Should().Be(false, "Name should be invalid");
+            paper.HasErrors.Should().Be(false, "Name should be invalid");
             var eventAssert = new PropertyChangedEventAssert(paper);
             eventAssert.ExpectNothing();
 
@@ -68,11 +68,11 @@ namespace ViewModelTests.UnitTests
 
             //	Assert
             eventAssert.Expect("Name");
-            eventAssert.Expect("IsNameValid");
-            vm.IsNameValid.Should().Be(true, "Name should now be valid.");
+            eventAssert.Expect("HasErrors");
+            vm.HasErrors.Should().Be(true, "Name should now be valid.");
         }
         [Fact]
-        public void IsNameValid_WhenValidNameIsSetToNull_IsFalse()
+        public void HasErrors_WhenValidNameIsSetToNull_IsFalse()
         {
             //	Arrange
             var paper = GetPopulatedNewspaper();
@@ -82,7 +82,7 @@ namespace ViewModelTests.UnitTests
             vm.Name = null;
 
             //	Assert
-            vm.IsNameValid.Should().Be(false, "Empty name is invalid");
+            vm.HasErrors.Should().Be(false, "Empty name is invalid");
         }
 
         [Fact]
