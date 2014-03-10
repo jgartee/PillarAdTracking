@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using FluentAssertions;
 using Granite.Testing;
 using Models;
@@ -35,41 +36,47 @@ namespace ViewModelTests.UnitTests
             mockPaperRepository.Received().Delete(paper);
         }
 
-        [Fact(Skip = "Possible invalid test.")]
-        public void HasErrors_WhenModified_PerformsPropertyChangedCallbackOnNameAndHasErrors()
+        [Fact]
+        public void HasErrors_WhenModified_PerformsErrorsChangedCallbackOnNameAndHasErrors()
         {
             //	Arrange
             var paper = GetPopulatedNewspaper();
             var vm = GetNewspaperViewModel(paper);
-            paper.HasErrors.Should().Be(true, "Name should be valid");
-            var eventAssert = new PropertyChangedEventAssert(paper);
-            eventAssert.ExpectNothing();
+            paper.HasErrors.Should().Be(false, "Name should be valid");
+            var errorChangedCallbackOccurred = false;
+            paper.ErrorsChanged += delegate(object sender, DataErrorsChangedEventArgs e)
+                                   {
+                                       errorChangedCallbackOccurred = true;
+                                   };
 
             //	Act
             vm.Name = null;
 
             //	Assert
-            eventAssert.Expect("Name");
-            eventAssert.Expect("HasErrors");
+            errorChangedCallbackOccurred.Should().Be(true, "Callback occurred");
         }
 
         [Fact(Skip = "Possible invalid test.")]
-        public void HasErrors_WhenInvalidNameChangedToValidName_PerformsPropertyChangedCallbackOnNameAnNameIsValid()
+        public void HasErrors_WhenInvalidNameChangedToValidName_PerformsErrorsChangedCallbackOnNameProperty()
         {
             //	Arrange
             var paper = GetEmptyNewspaper();
             var vm = GetNewspaperViewModel(paper);
             paper.HasErrors.Should().Be(false, "Name should be invalid");
-            var eventAssert = new PropertyChangedEventAssert(paper);
-            eventAssert.ExpectNothing();
+            var callbackOccurred = false;
+            var callbackPropertyName = "";
 
+            paper.ErrorsChanged += delegate(object sender, DataErrorsChangedEventArgs e)
+                                   {
+                                       callbackOccurred = true;
+                                       callbackPropertyName = e.PropertyName;
+                                   };
             //	Act
             vm.Name = NEW_PAPER_NAME;
 
             //	Assert
-            eventAssert.Expect("Name");
-            eventAssert.Expect("HasErrors");
-            vm.HasErrors.Should().Be(true, "Name should now be valid.");
+            vm.HasErrors.Should().Be(false, "Name should now be valid.");
+
         }
         [Fact]
         public void HasErrors_WhenValidNameIsSetToNull_IsFalse()

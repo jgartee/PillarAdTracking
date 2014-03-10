@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using FluentAssertions;
+using Granite.Testing;
 using Models;
 using Xunit;
 using Xunit.Extensions;
@@ -29,7 +30,7 @@ namespace Model.Tests.UnitTests
             var localAdList = new List<Advertisement> {ad1, ad2, ad3};
 
             paper.AddAdvertisements(localAdList);
-            paper.Advertisements.Count.Should().Be(3, "All advertisements should be added to the list");
+            paper.Advertisements.Count.Should().Be(3, "All advertisements should be added to the local list");
 
             //	Act
             paper.AddAdvertisement(null);
@@ -84,7 +85,6 @@ namespace Model.Tests.UnitTests
             //  Assert
             foreach (var ad in paper.Advertisements)
                 ad.Newspapers.Contains(paper).Should().Be(true, "The item is in the list.");
-            //            paper.Advertisements.ForEach(a=>a.Newspapers.Contains(paper).Should().Be(true,"The item is in the list."));
         }
 
         [Fact]
@@ -103,11 +103,9 @@ namespace Model.Tests.UnitTests
                                                          "All original advertisements were added to the Newspaper Advertisements collection");
 
             //	Act
-
             paper.AddAdvertisements(null);
 
             //	Assert
-
             paper.Advertisements.ShouldAllBeEquivalentTo(localAdList,
                                                          "Adding a null list does not impact the Newspaper Advertisements collection");
         }
@@ -125,11 +123,9 @@ namespace Model.Tests.UnitTests
             var localAdList = new List<Advertisement> {ad1, ad2, ad3};
 
             //	Act
-
             paper.AddAdvertisements(localAdList);
 
             //	Assert
-
             paper.Advertisements.ShouldAllBeEquivalentTo(localAdList,
                                                          "All advertisements added from a list appear in the Newspaper Advertisements collection");
         }
@@ -154,6 +150,7 @@ namespace Model.Tests.UnitTests
             //  Arrange
             var paper = GetNamedNewspaper();
             var ocList = new ObservableCollection<Advertisement>(advertisements);
+
             //  Act
             paper.Advertisements = ocList;
 
@@ -161,37 +158,37 @@ namespace Model.Tests.UnitTests
             paper.Advertisements.Count.Should().Be(adCount, "The number of ads in the list match the input list count");
         }
 
-        [Fact(Skip = "Possible invalid test.")]
-        public void HasErrors_EmptyObjectCreationWithName_IsTrue()
+        [Fact]
+        public void HasErrors_EmptyObjectCreationWithName_IsFalse()
         {
             //  Arrange
             var paper = GetNamedNewspaper();
 
             //  Act
             //  Assert
-            paper.HasErrors.Should().Be(true, "Any newspaper name is valid");
+            paper.HasErrors.Should().Be(false, "Any newspaper name is valid");
         }
 
         [Fact]
-        public void HasErrors_EmptyObjectCreationWithoutName_IsFalse()
+        public void HasErrors_EmptyObjectCreationWithoutName_IsTrue()
         {
             //  Arrange
             var paper = GetEmptyNewspaper();
 
             //  Act
             //  Assert
-            paper.HasErrors.Should().Be(false, "Newspapers must have a name");
+            paper.HasErrors.Should().Be(true, "Newspapers must have a name");
         }
 
-        [Fact(Skip = "Possible invalid test.")]
-        public void HasErrors_ExistingObjectReadFromDisk_IsTrue()
+        [Fact]
+        public void HasErrors_ExistingObjectCreatedByKey_IsFalse()
         {
             //	Arrange
             var paper = GetExistingNewspaper();
             
             //	Act
             //	Assert
-            paper.HasErrors.Should().Be(true, "Existing models already have a name.");
+            paper.HasErrors.Should().Be(false, "Existing models already have a name.");
         }
 
         private Newspaper GetExistingNewspaper()
@@ -201,12 +198,12 @@ namespace Model.Tests.UnitTests
             return paper;
         }
 
-        [Fact(Skip = "Possible invalid test.")]
-        public void HasErrors_WhenInvalidNameSetToNonEmptyString_IsTrue()
+        [Fact]
+        public void HasErrors_WhenInvalidNameSetToNonEmptyString_IsFalse()
         {
             //	Arrange
             var paper = GetUnnamedNewspaper();
-            paper.HasErrors.Should().Be(false, "Name is required");
+            paper.HasErrors.Should().Be(true, "Name is required");
 
             //	Act
             var newName = TEST_PAPER_NAME;
@@ -216,15 +213,15 @@ namespace Model.Tests.UnitTests
 
             //	Assert
 
-            paper.HasErrors.Should().Be(true, "Setting an invalid name to a valid string makes name valid");
+            paper.HasErrors.Should().Be(false, "Setting an invalid name to a valid string makes name valid");
         }
 
-        [Fact(Skip = "Possible invalid test.")]
-        public void HasErrors_WhenValidNameSetToNull_IsFalse()
+        [Fact]
+        public void HasErrors_WhenValidNameSetToNull_IsTrue()
         {
             //	Arrange
             var paper = GetNamedNewspaper();
-            paper.HasErrors.Should().Be(true, "Verify the name is valid after creation.");
+            paper.HasErrors.Should().Be(false, "Verify the name is valid after creation.");
 
             //	Act
 
@@ -232,7 +229,7 @@ namespace Model.Tests.UnitTests
             paper.Name.Should().Be("", "Verify name was set to null.");
 
             //	Assert
-            paper.HasErrors.Should().Be(false, "Name is required.");
+            paper.HasErrors.Should().Be(true, "Name is required.");
         }
 
         [Fact]
@@ -330,6 +327,60 @@ namespace Model.Tests.UnitTests
             paper.Advertisements.ShouldAllBeEquivalentTo(new List<Advertisement> {ad1, ad3, ad5});
         }
 
+        [Fact]
+        public void Name_WhenModified_PerformsPropertyChangedCallback()
+        {
+            //	Arrange
+            const string PAPER_NAME = "Paper 1 name";
+            const string NEW_PAPER_NAME = "New paper 1 name";
+
+            var paper = new Newspaper() { Name = PAPER_NAME };
+            var eventAssert = new PropertyChangedEventAssert(paper);
+
+            paper.Name.Should().Be(PAPER_NAME, "Ad name set properly");
+            eventAssert.ExpectNothing();
+            paper.Name = NEW_PAPER_NAME;
+            eventAssert.Expect("Name");
+        }
+
+        [Fact]
+        public void Name_WhenModifiedFromValidToInvalidChangesHasErrors_PerformsErrorsChangedCallback()
+        {
+            //	Arrange
+            const string PAPER_NAME = "Paper 1 name";
+            const string NEW_PAPER_NAME = "";
+            var errorChangedCalled = false;
+
+            var paper = new Newspaper() { Name = PAPER_NAME };
+            paper.ErrorsChanged += delegate(object sender,System.ComponentModel.DataErrorsChangedEventArgs e)
+                                   {
+                                       errorChangedCalled = true;
+                                   };
+
+            paper.Name = NEW_PAPER_NAME;
+            errorChangedCalled.Should().Be(true, "Event callback should have occurred.");
+        }
+
+        void paper_ErrorsChanged(object sender, System.ComponentModel.DataErrorsChangedEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        [Fact]
+        public void Name_WhenModifiedFromValidToInvalidChangesHasErrors_PerformsPropertyChangedCallback()
+        {
+            //	Arrange
+            const string PAPER_NAME = "Paper 1 name";
+            const string NEW_PAPER_NAME = "";
+
+            var paper = new Newspaper() { Name = PAPER_NAME };
+            var eventAssert = new PropertyChangedEventAssert(paper);
+
+            paper.Name.Should().Be(PAPER_NAME, "Ad name set properly");
+            eventAssert.ExpectNothing();
+            paper.Name = NEW_PAPER_NAME;
+            eventAssert.Expect("Name");
+        }
         #endregion
 
         #region ProperData Values for Inline Test Data
@@ -425,8 +476,6 @@ namespace Model.Tests.UnitTests
         #region Common objects
 
         #region Instance fields
-
-        private IRepository<Newspaper, Guid> _fakeRepository = new FakeNewspaperRepository();
 
         #endregion
 

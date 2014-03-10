@@ -15,8 +15,15 @@ namespace ViewModels
         protected ViewModelBase(EntityBase model)
         {
             _model = model;
-            model.PropertyChanging += modelBase_PropertyChanging;
-            model.PropertyChanged += modelBase_PropertyChanged;
+            _model.PropertyChanging += modelBase_PropertyChanging;
+            _model.PropertyChanged += modelBase_PropertyChanged;
+            _model.ErrorsChanged += modelBase_ErrorsChanged;
+        }
+
+        private void modelBase_ErrorsChanged(object sender, DataErrorsChangedEventArgs e)
+        {
+            if(ErrorsChanged != null)
+                ErrorsChanged(this, e);
         }
 
         #endregion
@@ -82,12 +89,12 @@ namespace ViewModels
 
         public IEnumerable GetErrors(string propertyName)
         {
-            throw new NotImplementedException();
+            return _model.GetErrors(propertyName);
         }
 
         public bool HasErrors
         {
-            get { return IsEntityValid; }
+            get { return _model.HasErrors; }
         }
 
         public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;

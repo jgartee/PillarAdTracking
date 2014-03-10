@@ -2,22 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Runtime.Serialization;
-using System.Xml.Serialization;
 
 namespace Models
 {
-    [DataContract]
     public class Advertisement : EntityBase, ISerializable
     {
         #region Instance fields
 
-        [DataMember]
+        private readonly ObservableCollection<Newspaper> _newspapers = new ObservableCollection<Newspaper>();
         private string _name;
-        [DataMember]
-        private ObservableCollection<Newspaper> _newspapers = new ObservableCollection<Newspaper>();
-        [DataMember]
         private string _text;
-        [DataMember]
         private Guid _uKey;
 
         #endregion
@@ -41,9 +35,9 @@ namespace Models
 
         public Advertisement(SerializationInfo info, StreamingContext context)
         {
-            _uKey = (Guid) info.GetValue("UKey", typeof (Guid));
-            Name = (string) info.GetValue("Name", typeof (string));
-            Text = (string) info.GetValue("Text", typeof (string));
+            _uKey = (Guid) info.GetValue("UKey", typeof(Guid));
+            Name = (string) info.GetValue("Name", typeof(string));
+            Text = (string) info.GetValue("Text", typeof(string));
             DbStatus = DbModificationState.Unchanged;
         }
 
@@ -51,27 +45,24 @@ namespace Models
 
         #region Properties
 
-
         public string Name
         {
             get { return _name; }
             set
             {
-                if (_name == value)
+                if(_name == value)
                     return;
 
                 OnPropertyChanging(() => Name);
                 _name = value ?? "";
 
                 if(string.IsNullOrEmpty(_name))
-                    SetError(()=>Name, "Advertisement name cannot be empty.");
+                    SetError(() => Name, "Advertisement name cannot be empty.");
                 else
                     ClearError(() => Name);
 
                 OnPropertyChanged(() => Name);
-                NotifyErrorsChanged(()=>Name);
-
-
+                NotifyErrorsChanged(() => Name);
             }
         }
 
@@ -82,10 +73,10 @@ namespace Models
             {
                 _newspapers.Clear();
 
-                if (value == null)
+                if(value == null)
                     return;
 
-                foreach (var paper in value)
+                foreach(Newspaper paper in value)
                     AddNewspaper(paper);
             }
         }
@@ -95,14 +86,16 @@ namespace Models
             get { return _text; }
             set
             {
-                if (_text == value)
+                if(_text == value)
                     return;
 
                 OnPropertyChanging(() => Text);
                 _text = value;
 
                 if(string.IsNullOrEmpty(_text))
-                    SetError(()=>Text,"The Advertisement text cannot be empty.");
+                    SetError(() => Text, "The Advertisement text cannot be empty.");
+                else
+                    ClearError(() => Text);
 
                 OnPropertyChanged(() => Text);
             }
@@ -113,7 +106,7 @@ namespace Models
             get { return _uKey; }
             set
             {
-                if (_uKey == value)
+                if(_uKey == value)
                     return;
 
                 OnPropertyChanging(() => UKey);
@@ -128,9 +121,9 @@ namespace Models
 
         public void GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            info.AddValue("UKey", UKey, typeof (Guid));
-            info.AddValue("Name", Name, typeof (string));
-            info.AddValue("Text", Text, typeof (string));
+            info.AddValue("UKey", UKey, typeof(Guid));
+            info.AddValue("Name", Name, typeof(string));
+            info.AddValue("Text", Text, typeof(string));
         }
 
         #endregion
@@ -139,7 +132,7 @@ namespace Models
 
         public void AddNewspaper(Newspaper paper)
         {
-            if (paper == null)
+            if(paper == null)
                 return;
 
             _newspapers.Add(paper);
@@ -147,7 +140,7 @@ namespace Models
 
         public void AddNewspapers(List<Newspaper> newspapers)
         {
-            if (newspapers == null)
+            if(newspapers == null)
                 return;
 
             newspapers.ForEach(AddNewspaper);

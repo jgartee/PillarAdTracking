@@ -130,6 +130,8 @@ namespace Models
                 errorCollection = new List<string>{message};
                 _errorDictionary.Add(ExtractPropertyName(propertyExpression), errorCollection);
             }
+
+            NotifyErrorsChanged(propertyExpression);
         }
 
         protected void ClearError<T>(Expression<Func<T>> propertyExpression)
@@ -139,7 +141,8 @@ namespace Models
             _errorDictionary.TryGetValue(ExtractPropertyName(propertyExpression), out errorCollection);
 
             if(errorCollection != null && errorCollection.Any())
-                errorCollection.Remove(ExtractPropertyName(propertyExpression));
+                _errorDictionary.Remove(ExtractPropertyName(propertyExpression));
+            NotifyErrorsChanged(propertyExpression);
         }
 
         public IEnumerable GetErrors(string propertyName)

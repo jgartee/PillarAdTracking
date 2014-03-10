@@ -56,7 +56,6 @@
     <Compile Include="Integration Tests\NewspaperIntegrationTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Unit Tests\AdvertisementUnitTests.cs" />
-    <Compile Include="Unit Tests\FakeNewspaperRepository.cs" />
     <Compile Include="Unit Tests\NewspaperUnitTests.cs" />
   </ItemGroup>
   <ItemGroup>
